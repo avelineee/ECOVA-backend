@@ -1,0 +1,195 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  admin_bank
+  nasabah
+}
+
+enum JenisSampah {
+  plastik
+  kertas
+  logam
+  kaca
+}
+
+enum StatusSetor {
+  belum_dikonfirmasi
+  diproses
+  selesai
+  ditolak
+}
+
+enum StatusPenukaran {
+  diproses
+  selesai
+}
+
+//ini tambahan sendiri
+enum MetodeSetor {
+  jemput
+  antar
+}
+
+enum StatusPenjemputan {
+  menunggu
+  menuju_lokasi
+  sudah_diambil
+  selesai
+}
+
+model User {
+  id         Int      @id @default(autoincrement())
+  username   String   @unique @db.VarChar(50)
+  password   String   @db.VarChar(255)
+  role       Role
+  created_at DateTime @default(now())
+
+  nasabah   Nasabah?
+  adminBank AdminBank?
+
+  @@map("users")
+}
+
+model Nasabah {
+  id           Int     @id @default(autoincrement())
+  nama_nasabah String  @db.VarChar(100)
+  alamat       String  @db.Text
+  telp         String  @db.VarChar(20)
+  saldo_poin   Float   @default(0)
+  id_user      Int     @unique
+  foto         String? @db.VarChar(255)
+
+  user        User          @relation(fields: [id_user], references: [id])
+  setorSampah SetorSampah[]
+
+  @@map("nasabah")
+}
+
+model AdminBank {
+  id             Int     @id @default(autoincrement())
+  nama_unit      String  @db.VarChar(100)
+  nama_pengelola String  @db.VarChar(100)
+  telp           String  @db.VarChar(20)
+  alamat         String? @db.Text
+  id_user        Int     @unique
+  foto           String? @db.VarChar(255)
+
+  // TAMBAHAN
+  hari_operasional String? @db.VarChar(100)
+  jam_buka         String? @db.VarChar(5)
+  jam_tutup        String? @db.VarChar(5)
+
+  user        User          @relation(fields: [id_user], references: [id])
+  setorSampah SetorSampah[]
+
+  @@map("admin_bank")
+}
+
+model KategoriSampah {
+  id            Int         @id @default(autoincrement())
+  nama_kategori String      @db.VarChar(100)
+  harga_per_kg  Float
+  poin_per_kg   Float
+  jenis         JenisSampah
+  foto          String?     @db.VarChar(255)
+
+  detailSetor DetailSetor[]
+
+  @@map("kategori_sampah")
+}
+
+model SetorSampah {
+  id         Int         @id @default(autoincrement())
+  tanggal    DateTime
+  id_admin   Int?
+  id_nasabah Int
+  status     StatusSetor
+
+  // TAMBAHAN
+  metode_setor MetodeSetor @default(antar)
+
+  admin         AdminBank?      @relation(fields: [id_admin], references: [id])
+  nasabah       Nasabah         @relation(fields: [id_nasabah], references: [id])
+  detailSetor   DetailSetor[]
+  penukaranPoin PenukaranPoin[]
+  penjemputan   Penjemputan?
+
+  @@map("setor_sampah")
+}
+
+model DetailSetor {
+  id                 Int   @id @default(autoincrement())
+  id_setor           Int
+  id_kategori_sampah Int
+  berat_kg           Float
+  subtotal_poin      Float
+
+  setor          SetorSampah    @relation(fields: [id_setor], references: [id])
+  kategoriSampah KategoriSampah @relation(fields: [id_kategori_sampah], references: [id])
+
+  @@map("detail_setor")
+}
+
+model Hadiah {
+  id              Int     @id @default(autoincrement())
+  nama_hadiah     String  @db.VarChar(100)
+  poin_dibutuhkan Float
+  stok            Int
+  foto            String? @db.VarChar(255)
+
+  penukaranPoin PenukaranPoin[]
+
+  @@map("hadiah")
+}
+
+model PenukaranPoin {
+  id            Int             @id @default(autoincrement())
+  tanggal       DateTime
+  id_setor      Int
+  id_hadiah     Int
+  poin_terpakai Float
+  status        StatusPenukaran
+
+  setor  SetorSampah @relation(fields: [id_setor], references: [id])
+  hadiah Hadiah      @relation(fields: [id_hadiah], references: [id])
+
+  @@map("penukaran_poin")
+}
+
+//BARU
+model JadwalPenjemputan {
+  id          Int      @id @default(autoincrement())
+  tanggal     DateTime
+  jam_mulai   String   @db.VarChar(5)
+  jam_selesai String   @db.VarChar(5)
+  is_active   Boolean  @default(true)
+
+  penjemputan Penjemputan[]
+
+  @@map("jadwal_penjemputan")
+}
+
+model Penjemputan {
+  id                 Int               @id @default(autoincrement())
+  id_setor           Int               @unique
+  id_jadwal          Int
+  alamat_penjemputan String            @db.Text
+  status             StatusPenjemputan @default(menunggu)
+
+  setor  SetorSampah       @relation(fields: [id_setor], references: [id])
+  jadwal JadwalPenjemputan @relation(fields: [id_jadwal], references: [id])
+
+  @@map("penjemputan")
+}
