@@ -1,114 +1,574 @@
+# ♻️ ECOVA Backend
+
+> **Eco Collection, Value & Action**  
+> *Turn Waste Into Value.*
+
+ECOVA Backend adalah RESTful API untuk **ECOVA (Eco Collection, Value & Action)**, sebuah aplikasi Bank Sampah Digital & Daur Ulang yang membantu proses pengelolaan sampah, penyetoran, perhitungan poin, penukaran hadiah, serta pengelolaan data bank sampah secara terintegrasi.
+
+Backend ini dikembangkan menggunakan **NestJS, TypeScript, Prisma ORM, dan PostgreSQL (Supabase)** sebagai bagian dari project **Uji Kompetensi Keahlian (UKK) RPL 2026/2027**.
+
+---
+
+## 📖 Tentang ECOVA
+
+ECOVA merupakan singkatan dari **Eco Collection, Value & Action**.
+
+Nama ini menggambarkan proses utama aplikasi:
+
+- **Eco Collection** — mengumpulkan dan mengelola sampah yang dapat didaur ulang.
+- **Value** — mengubah sampah menjadi nilai berupa poin.
+- **Action** — mendorong aksi nyata dalam menjaga lingkungan.
+
+ECOVA memiliki dua role utama:
+
+### 👤 Nasabah
+
+Nasabah dapat melakukan registrasi, login, melihat kategori sampah, mengajukan penyetoran, memilih metode antar atau jemput, melihat histori transaksi, memperoleh poin dari hasil verifikasi sampah, serta menukarkan poin dengan hadiah.
+
+### 🛠️ Admin Bank Sampah
+
+Admin bertugas mengelola nasabah, kategori sampah, hadiah, jadwal penjemputan, memverifikasi penyetoran dan hasil timbang, mengelola transaksi penukaran poin, serta melihat dashboard dan rekapitulasi bank sampah.
+
+---
+
+## 🚀 Tech Stack
+
+| Technology | Usage |
+| --- | --- |
+| **NestJS** | Backend Framework |
+| **TypeScript** | Programming Language |
+| **Prisma ORM** | Database ORM |
+| **PostgreSQL** | Relational Database |
+| **Supabase** | PostgreSQL Database Hosting |
+| **JWT** | Authentication |
+| **bcrypt** | Password Hashing |
+| **Swagger** | API Documentation & Testing |
+| **class-validator** | Request Validation |
+| **Multer** | Local File Upload |
+
+---
+
+## ✨ Backend Features
+
+### 🔐 Authentication & Authorization
+
+- Register Nasabah
+- Register Admin / Unit Bank Sampah
+- Login Nasabah dan Admin
+- JWT Authentication
+- Role-based authorization
+- Password hashing menggunakan bcrypt
+- Get authenticated user profile
+- Update profile
+- Upload profile photo
+
+Role yang digunakan:
+
+```text
+admin_bank
+nasabah
+```
+
+---
+
+### 👥 Nasabah Management
+
+Admin dapat:
+
+- Melihat seluruh nasabah
+- Melihat detail nasabah
+- Menambahkan nasabah
+- Memperbarui data nasabah
+- Menghapus nasabah sesuai aturan transaksi
+- Melihat saldo poin nasabah
+
+Saldo poin tidak diedit secara manual karena perubahan saldo berasal dari transaksi penyetoran dan penukaran poin.
+
+---
+
+### ♻️ Waste Category Management
+
+Admin dapat melakukan CRUD kategori sampah.
+
+Setiap kategori memiliki informasi seperti:
+
+- Nama kategori
+- Jenis sampah
+- Harga per kilogram
+- Poin per kilogram
+- Foto kategori
+
+Jenis sampah:
+
+```text
+plastik
+kertas
+logam
+kaca
+```
+
+---
+
+### 📦 Waste Deposit
+
+Nasabah dapat mengajukan penyetoran satu atau beberapa jenis sampah dalam satu transaksi.
+
+Flow status penyetoran:
+
+```text
+belum_dikonfirmasi
+        ↓
+     diproses
+        ↓
+      selesai
+```
+
+Pengajuan juga dapat berubah menjadi:
+
+```text
+ditolak
+```
+
+Berat yang dimasukkan Nasabah merupakan **estimasi awal**.
+
+Ketika sampah diproses, Admin melakukan penimbangan ulang. **Berat hasil verifikasi Admin menjadi dasar perhitungan poin final.**
+
+Contoh:
+
+```text
+Estimasi Nasabah : 4 kg
+Poin / kg        : 15 poin
+
+Hasil Timbang    : 3.7 kg
+
+Poin Final:
+3.7 × 15 = 55.5 poin
+```
+
+Setelah transaksi berhasil diselesaikan, poin final akan ditambahkan ke saldo poin Nasabah.
+
+---
+
+## 🚚 Deposit Method
+
+ECOVA mendukung dua metode penyetoran:
+
+### 🏦 Antar
+
+Nasabah mengantarkan sampah secara langsung ke Bank Sampah ECOVA.
+
+Informasi operasional yang dapat ditampilkan:
+
+- Nama unit
+- Alamat bank sampah
+- Nomor telepon
+- Hari operasional
+- Jam buka
+- Jam tutup
+
+### 🚚 Jemput
+
+Nasabah dapat meminta sampah dijemput dengan:
+
+- Memilih jadwal penjemputan yang tersedia
+- Mengisi alamat penjemputan
+- Melihat perkembangan status penjemputan
+
+Tracking penjemputan:
+
+```text
+menunggu
+   ↓
+menuju_lokasi
+   ↓
+sudah_diambil
+   ↓
+selesai
+```
+
+Status penjemputan dan status transaksi penyetoran dikelola secara terpisah.
+
+---
+
+## 📅 Pickup Schedule Management
+
+Admin dapat:
+
+- Menambahkan jadwal penjemputan
+- Melihat jadwal
+- Memperbarui jadwal
+- Mengaktifkan / menonaktifkan jadwal
+- Menghapus jadwal yang belum digunakan
+
+Nasabah hanya dapat memilih jadwal penjemputan yang masih aktif dan tersedia.
+
+---
+
+## 🎁 Reward Management
+
+Admin dapat melakukan CRUD hadiah yang dapat ditukarkan oleh Nasabah.
+
+Informasi hadiah meliputi:
+
+- Nama hadiah
+- Poin yang dibutuhkan
+- Stok
+- Foto hadiah
+
+Nasabah dapat melihat katalog hadiah dan menukarkan saldo poin yang dimiliki.
+
+---
+
+## 💰 Point Redemption
+
+Flow penukaran poin:
+
+```text
+Nasabah memilih hadiah
+        ↓
+Validasi saldo poin
+        ↓
+Poin dikurangi
+        ↓
+Penukaran dibuat
+        ↓
+diproses
+        ↓
+Admin memproses
+        ↓
+selesai
+```
+
+Nasabah dapat melihat histori penukaran dan mencetak nota transaksi.
+
+Admin dapat melihat seluruh transaksi penukaran serta memperbarui statusnya.
+
+---
+
+## 🧾 Transaction Receipt
+
+Backend menyediakan data nota untuk:
+
+- Nota penyetoran sampah
+- Nota penukaran poin
+
+Nota dapat diakses sesuai role dan kepemilikan transaksi.
+
+---
+
+## 📊 Dashboard
+
+### Nasabah Dashboard
+
+Dashboard Nasabah menyediakan informasi seperti:
+
+- Saldo poin
+- Total sampah yang berhasil disetor
+- Pemasukan poin
+- Pengeluaran poin
+- Transaksi setoran terakhir
+- Transaksi penukaran terakhir
+
+### Admin Dashboard
+
+Dashboard Admin menyediakan statistik seperti:
+
+- Total nasabah
+- Total kategori sampah
+- Total hadiah
+- Total transaksi setoran
+- Total transaksi penukaran
+- Total sampah terkumpul
+- Total saldo poin
+- Total poin yang diterbitkan
+
+ECOVA juga menyediakan statistik publik untuk landing page yang dapat diakses tanpa autentikasi.
+
+---
+
+## 📈 Monthly Recap
+
+Admin dapat melihat rekapitulasi berdasarkan bulan yang mencakup:
+
+- Total sampah dalam kilogram
+- Total sampah dalam ton
+- Estimasi pembayaran
+- Total poin diterbitkan
+- Breakdown berdasarkan jenis sampah
+- Total transaksi penukaran
+- Total poin yang digunakan
+
+Jenis breakdown:
+
+```text
+Plastik
+Kertas
+Logam
+Kaca
+```
+
+---
+
+## 🗄️ Main Database Entities
+
+Database ECOVA terdiri dari beberapa entitas utama:
+
+```text
+User
+│
+├── Nasabah
+│     │
+│     └── SetorSampah
+│           │
+│           ├── DetailSetor
+│           ├── Penjemputan
+│           └── PenukaranPoin
+│
+└── AdminBank
+      │
+      └── SetorSampah
+
+KategoriSampah
+      │
+      └── DetailSetor
+
+Hadiah
+      │
+      └── PenukaranPoin
+
+JadwalPenjemputan
+      │
+      └── Penjemputan
+```
+
+Database menggunakan **PostgreSQL** dengan **Prisma ORM**.
+
+---
+
+## 📂 Project Structure
+
+```text
+ecova-backend/
+│
+├── prisma/
+│   ├── migrations/
+│   └── schema.prisma
+│
+├── src/
+│   ├── auth/
+│   ├── users/
+│   ├── kategori-sampah/
+│   ├── setor-sampah/
+│   ├── hadiah/
+│   ├── penukaran-poin/
+│   ├── jadwal-penjemputan/
+│   ├── rekapitulasi/
+│   ├── dashboard/
+│   ├── prisma/
+│   ├── seed/
+│   ├── app.module.ts
+│   └── main.ts
+│
+├── test/
+├── .gitignore
+├── nest-cli.json
+├── package.json
+├── prisma.config.ts
+├── tsconfig.json
+└── README.md
+```
+
+---
+
+## ⚙️ Installation
+
+### 1. Clone Repository
+
+```bash
+git clone <repository-url>
+cd ecova-backend
+```
+
+### 2. Install Dependencies
+
+```bash
+npm install
+```
+
+### 3. Environment Variables
+
+Buat file:
+
+```text
+.env
+```
+
+Kemudian konfigurasi environment yang diperlukan, misalnya:
+
+```env
+DATABASE_URL="your-postgresql-connection-string"
+JWT_SECRET="your-jwt-secret"
+```
+
+> Jangan commit file `.env` ke repository.
+
+### 4. Generate Prisma Client
+
+```bash
+npx prisma generate
+```
+
+### 5. Run Database Migration
+
+Untuk development:
+
+```bash
+npx prisma migrate dev
+```
+
+### 6. Start Development Server
+
+```bash
+npm run start:dev
+```
+
+Backend akan berjalan secara default pada:
+
+```text
+http://localhost:3000
+```
+
+---
+
+## 📚 API Documentation
+
+Dokumentasi REST API tersedia melalui **Swagger UI** setelah backend dijalankan.
+
+```text
+http://localhost:3000/api
+```
+
+Swagger dapat digunakan untuk:
+
+- Melihat seluruh endpoint
+- Melihat request body
+- Melihat response API
+- Menguji endpoint
+- Menguji JWT authentication
+
+Untuk endpoint protected, gunakan:
+
+```text
+Authorization: Bearer <access_token>
+```
+
+---
+
+## 🔐 Security
+
+ECOVA Backend menerapkan beberapa mekanisme keamanan:
+
+- JWT Authentication
+- Role-Based Access Control
+- Password hashing menggunakan bcrypt
+- DTO validation
+- Request validation menggunakan `ValidationPipe`
+- Protected Admin endpoints
+- Transaction ownership validation
+- File type validation untuk upload
+- File size validation
+
+---
+
+## 📤 File Upload
+
+Beberapa data ECOVA mendukung upload gambar, seperti:
+
+```text
+Profile
+Kategori Sampah
+Hadiah
+```
+
+File disimpan secara lokal pada backend melalui folder `uploads`.
+
+Folder upload tidak disimpan ke repository karena merupakan runtime/user-generated data.
+
+---
+
+## 🔄 API Response Format
+
+Response sukses menggunakan struktur:
+
+```json
+{
+  "statusCode": 200,
+  "success": true,
+  "message": "Request berhasil diproses",
+  "data": {}
+}
+```
+
+Contoh error:
+
+```json
+{
+  "statusCode": 400,
+  "success": false,
+  "message": "Request tidak valid"
+}
+```
+
+---
+
+## 🧪 API Testing
+
+API dapat diuji menggunakan:
+
+- Swagger UI
+- Postman
+
+Sebelum menguji endpoint protected:
+
+1. Login sebagai Nasabah atau Admin.
+2. Salin `access_token`.
+3. Gunakan token sebagai Bearer Token.
+4. Jalankan endpoint sesuai role.
+
+---
+
+## 🌱 ECOVA Philosophy
+
+ECOVA dirancang dengan konsep sederhana:
+
+```text
+COLLECT
+   ↓
+VERIFY
+   ↓
+VALUE
+   ↓
+REWARD
+   ↓
+ACTION
+```
+
+Sampah yang dikumpulkan tidak hanya dicatat, tetapi diverifikasi dan dikonversi menjadi nilai berupa poin sehingga dapat mendorong partisipasi masyarakat dalam pengelolaan sampah yang lebih bertanggung jawab.
+
+---
+
+## 👩‍💻 Developer
+
+**Aveline Voleta Wardani**  
+Software Engineering Student  
+SMK Telkom Malang
+
+**Project:** Uji Kompetensi Keahlian RPL 2026/2027  
+**Application:** ECOVA — Eco Collection, Value & Action
+
+---
+
 <p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
+  <b>ECOVA — Eco Collection, Value & Action</b><br>
+  <i>Turn Waste Into Value.</i> ♻️
 </p>
-
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
-
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
-
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
-
-```bash
-$ npm install
-```
-
-## Compile and run the project
-
-```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
-```
-
-## Run tests
-
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
-```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Observability
-
-In production applications, observability is essential for understanding how your system behaves, detecting issues early, and maintaining reliable performance.
-
-[NestJS Observe](https://observe.nestjs.com) automatically instruments your NestJS application, giving you deep visibility into your system with minimal setup:
-
-- **Distributed tracing:** Follow requests across services and understand how they flow through your system.
-- **Waterfall analysis:** Visualize request execution and identify slow operations, bottlenecks, and unexpected delays.
-- **Performance analysis:** Analyze application performance in real time and quickly pinpoint areas that need optimization.
-- **Metrics:** Track key application and infrastructure metrics to understand system health and performance trends.
-- **Logging:** Centralize and correlate logs with traces and other telemetry to make debugging easier.
-- **Error tracking:** Detect errors quickly and investigate their root causes with the surrounding context.
-- **SLA monitoring:** Track service-level objectives and identify when your application is approaching or exceeding defined thresholds.
-- **Alarms and alerts:** Set up alerts for critical errors, performance degradation, SLA violations, and other anomalies so your team can react quickly.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Auto-instrument your application with [NestJS Observer](https://observer.nestjs.com). Distributed tracing, metrics, and logging made easy. Error tracking and performance monitoring for your NestJS applications.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
