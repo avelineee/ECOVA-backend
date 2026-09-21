@@ -70,16 +70,14 @@ async function bootstrap() {
   SwaggerModule.setup('api', app, document);
 
   // =========================
-  // SERVER
-  // =========================
-  await app.listen(process.env.PORT ?? 3000);
+// SERVER
+// =========================
+const port = process.env.PORT ?? 3000;
 
-  console.log(
-    `ECOVA Backend running on http://localhost:${process.env.PORT ?? 3000}`,
-  );
-  console.log(
-    `Swagger available at http://localhost:${process.env.PORT ?? 3000}/api`,
-  );
+await app.listen(port, '0.0.0.0');
+
+console.log(`ECOVA Backend running on port ${port}`);
+console.log(`Swagger available at /api`);
 }
 
 bootstrap();
